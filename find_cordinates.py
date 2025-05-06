@@ -1,13 +1,14 @@
 import mouse
 import keyboard
-
-mouse.get_position()
+import time
 
 print("Press X to end!")
 
 while True:
+    pos = mouse.get_position()
+    print(f"Mouse position: {pos}", end="\r")  # show pos without flooding the terminal
+    time.sleep(0.1)
+    
     if keyboard.is_pressed('x'):
-        print("Program quitted!")
+        print("\nProgram quitted!")
         break
-
-print(mouse.get_position())
