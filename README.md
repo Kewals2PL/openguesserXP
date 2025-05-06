@@ -3,12 +3,14 @@ Mostly because it depends on your monitor size and country you want to gain xp o
 
 1. Launch `find_cordinates.py` and copy the outcome
 
-2. Paste the outcome in the `congif.json` and add variables as such:
+2. Paste it in the `congif.json` and add variables as such:
 
 {
-    "POSITON":"100, 110",
+
+    "POSITON_FOR_SOMETHING":"100, 110",
+
 }
 
-3. You should be ready! (At least if you didn't srew up something...)
+3. You should be ready! (at least if you didn't srew up something...)
 
-### Note to yourself: **DO IT ON FULLSCREEN!!!**
+#### Note to self: **DO IT ON FULLSCREEN!!!**
