@@ -14,3 +14,6 @@ Mostly because it depends on your monitor size and country you want to gain xp o
 3. You should be ready! (at least if you didn't srew up something...)
 
 #### Note to self: **DO IT ON FULLSCREEN!!!**
+
+# LICENSE
+[MIT](https://raw.githubusercontent.com/Kewals2PL/openguesserXP/refs/heads/main/LICENSE)
