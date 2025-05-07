@@ -2,6 +2,7 @@ import json
 import time
 import keyboard
 import pyautogui
+from datetime import datetime
 try:
     import ctypes
     ctypes.windll.user32.SetProcessDPIAware()
@@ -32,17 +33,31 @@ print(2)
 time.sleep(1)
 print(1)
 time.sleep(1)
-print("Press X to end!")
+print("Hold ESCAPE to end!")
 
 def move_and_click(x, y):
     pyautogui.moveTo(x, y, duration=0.1)
-    time.sleep(0.05)  # to avoid "slide"
     pyautogui.click()
 
+log_path = "log.txt"
+with open(log_path, "w", encoding="utf-8") as f:
+    f.write("Log start\n")
+
+attempt = 1
+
 while True:
-    if keyboard.is_pressed('x'):
+    if keyboard.is_pressed('esc'):
         print("Program quitted!")
         break
+
+    now = datetime.now().strftime("%H:%M:%S")
+    log_entry = f"att:{attempt} at {now}"
+    print(f"\n{log_entry}")
+
+    with open(log_path, "a", encoding="utf-8") as log_file:
+        log_file.write(log_entry + "\n")
+
+    attempt += 1
 
     move_and_click(map_x, map_y)
     move_and_click(place_x, place_y)
