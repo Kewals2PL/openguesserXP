@@ -3,6 +3,9 @@ import time
 import keyboard
 import pyautogui
 from datetime import datetime
+import os
+import sys
+import subprocess
 try:
     import ctypes
     ctypes.windll.user32.SetProcessDPIAware()
@@ -17,7 +20,38 @@ def parse_position(pos_str):
     x, y = map(int, pos_str.split(","))
     return x, y
 
+
+def resource_path(relative_path):
+    """Zwraca ścieżkę do pliku, działa też w .exe po spakowaniu."""
+    try:
+        base_path = sys._MEIPASS  # tylko w PyInstaller
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+def load_config(filename):
+    path = resource_path(filename)
+    with open(path, "r") as f:
+        return json.load(f)
+    
+
+
+def prompt_for_coordinates(config):
+    print("\nCurrent coordinates:")
+    for key, value in config.items():
+        print(f'  {key}: "{value}"')
+    choice = input("\nDo you want to choose new coordinates? (y/n): ").strip().lower()
+    if choice == "y":
+        subprocess.run(["python", resource_path("find_coordinates.py")])
+        print("\nRestart the application after setting new coordinates.")
+        sys.exit()
+
+
+
+
 config = load_config("config.json")
+
+prompt_for_coordinates(config)
 
 map_x, map_y = parse_position(config["MAP_POS"])
 place_x, place_y = parse_position(config["PLACE_FLAG_POS"])

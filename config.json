@@ -1,7 +1,7 @@
 {
-    "MAP_POS":"x, y",
-    "PLACE_FLAG_POS":"x, y",
-    "GUESS_BUTTON_POS":"x, y",
-    "CONTINUE_BUTTON_POS":"x, y",
-    "ERROR_BUTTON_CLOSE_POS":"x, y"
+    "MAP_POS":"10, 10",
+    "PLACE_FLAG_POS":"10, 10",
+    "GUESS_BUTTON_POS":"10, 10",
+    "CONTINUE_BUTTON_POS":"10, 10",
+    "ERROR_BUTTON_CLOSE_POS":"10, 10"
 }
