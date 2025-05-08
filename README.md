@@ -1,19 +1,20 @@
-# YOU HAVE TO CONFIGURE THIS PROGRAM FOR YOURSELF!
-Mostly because it depends on your monitor size and country you want to gain xp on - **Andorra recomended!**
+# How to Set Up openguesserXP?
 
-1. Launch `find_cordinates.py` and copy the outcome
+### One-Time Setup Required
 
-2. Paste it in the `congif.json` and add variables as such:
+This program won’t work until you configure it, because it depends on:
 
-{
+    Your screen resolution,
 
-    "POSITON_FOR_SOMETHING":"100, 110",
+    the country you want to gain XP on (**Andorra is recommended**).
 
-}
+## Step-by-Step Instructions:
 
-3. You should be ready! (at least if you didn't srew up something...)
+   1. Launch the EXE file
+   2. Choose coordinates
+   3. **Press ESC to quit**
 
 #### Note to self: **DO IT ON FULLSCREEN!!!**
+License
 
-# LICENSE
 [MIT](https://raw.githubusercontent.com/Kewals2PL/openguesserXP/refs/heads/main/LICENSE)
