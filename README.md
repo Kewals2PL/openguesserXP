@@ -1,4 +1,4 @@
-# How to Set Up openguesserXP?
+# How to Set Up openguessrXP?
 
 ### One-Time Setup Required
 
