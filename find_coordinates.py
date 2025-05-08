@@ -3,7 +3,6 @@ import pyautogui
 import keyboard
 import time
 
-
 FIELD_KEYS = {
     '1': "MAP_POS",
     '2': "PLACE_FLAG_POS",
@@ -27,7 +26,7 @@ def save_config(config):
 
 def main():
     print("Move the mouse to the desired position and press a key (1–5) to save it.")
-    print("Press 'x' to exit.\n")
+    print("Press 'ESC' to save.\n")
 
     config = load_config()
 
@@ -38,10 +37,10 @@ def main():
                 config[field] = f"{x}, {y}"
                 save_config(config)
                 print(f"[{field}] saved as: {x}, {y}")
-                time.sleep(0.3)  # krótki delay, by uniknąć wielokrotnego zapisu
+                time.sleep(0.3)
 
-        if keyboard.is_pressed('x'):
-            print("Exiting.")
+        if keyboard.is_pressed('esc'):
+            print("Saving...")
             break
 
 if __name__ == "__main__":
