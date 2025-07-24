@@ -15,6 +15,6 @@ This program won’t work until you configure it, because it depends on:
    3. **Press ESC to quit**
 
 #### Note to self: **DO IT ON FULLSCREEN!!!**
-##License
+## License
 
 [MIT](https://raw.githubusercontent.com/Kewals2PL/openguesserXP/refs/heads/main/LICENSE)
