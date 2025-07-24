@@ -34,7 +34,7 @@ The `config.json` file should contain the following format:
 
 3. Run the script using:
 
-`powershell -ExecutionPolicy Bypass -File .\main.ps1`
+        `powershell -ExecutionPolicy Bypass -File .\main.ps1`
 
 4. You will be prompted whether to update coordinates. Type y if you want to run the Python tool find_coordinates.py (must be present and Python must be installed).
 
