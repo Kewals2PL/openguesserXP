@@ -30,15 +30,17 @@ The `config.json` file should contain the following format:
 
 1. Make sure main.ps1 and config.json are in the same folder.
 
-2. Open PowerShell in that directory.
+2. Open PowerShell (Terminal) in that directory.
 
 3. Run the script using:
 
-        `powershell -ExecutionPolicy Bypass -File .\main.ps1`
+        Set-ExecutionPolicy Bypass -Scope Process
+   and then:  
+   `.\main.ps1`
+   
+5. You will be prompted whether to update coordinates. Type y if you want to run the Python tool find_coordinates.py (must be present and Python must be installed).
 
-4. You will be prompted whether to update coordinates. Type y if you want to run the Python tool find_coordinates.py (must be present and Python must be installed).
-
-5. The script will start clicking automatically. Press ESC at any time to stop the loop.
+6. The script will start clicking automatically. Press ESC at any time to stop the loop.
 
 ### Setting Coordinates Manually (optional)
 
