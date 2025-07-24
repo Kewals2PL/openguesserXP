@@ -53,16 +53,6 @@ To safely stop the click loop, press the ESC key. The script checks for this dur
     Works only on Windows.
 
     Must be run from a .ps1 file — partial execution in the console will break path handling logic ($MyInvocation).
-## Script Execution Policy
-
-If needed, temporarily allow script execution using:
-
-Set-ExecutionPolicy Bypass -Scope Process
-
-Or permanently (user scope):
-
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-
 # License
 
 [MIT](https://raw.githubusercontent.com/Kewals2PL/openguesserXP/refs/heads/main/LICENSE)
