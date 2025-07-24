@@ -66,3 +66,6 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 # License
 
 [MIT](https://raw.githubusercontent.com/Kewals2PL/openguesserXP/refs/heads/main/LICENSE)
+
+
+***alternatively use macro lol***
