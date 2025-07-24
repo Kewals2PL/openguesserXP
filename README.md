@@ -40,9 +40,9 @@ The `config.json` file should contain the following format:
 
 5. The script will start clicking automatically. Press ESC at any time to stop the loop.
 
-### Setting Coordinates (optional)
+### Setting Coordinates Manually (optional)
 
-You can manually enter coordinates in config.json, or use the optional find_coordinates.py helper script to select positions interactively using the mouse.
+You can manually enter coordinates in config.json.
 ## Exiting
 
 To safely stop the click loop, press the ESC key. The script checks for this during each cycle.
