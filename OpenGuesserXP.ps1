@@ -1,142 +1,134 @@
-# OpenGuesserXP.ps1
-Add-Type -AssemblyName System.Windows.Forms,System.Drawing
-
-# --- Funkcje P/Invoke dla myszy i klawiszy ---
-Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-public class WinApi {
+# Załaduj niezbędne metody z WinAPI do poruszania myszką i klikania
+Add-Type -Namespace WinAPI -Name User32 -MemberDefinition @"
     [DllImport("user32.dll")]
-    public static extern bool GetCursorPos(out System.Drawing.Point lpPoint);
+    public static extern bool SetProcessDPIAware();
     [DllImport("user32.dll")]
-    public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
+    public static extern bool SetCursorPos(int X, int Y);
     [DllImport("user32.dll")]
-    public static extern short GetAsyncKeyState(int vKey);
-}
+    public static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
 "@
 
 # Flagi do mouse_event
-$MOUSEEVENTF_LEFTDOWN  = 0x0002
-$MOUSEEVENTF_LEFTUP    = 0x0004
+$MOUSEEVENTF_LEFTDOWN = 0x0002
+$MOUSEEVENTF_LEFTUP   = 0x0004
 
-function Get-MousePosition {
-    [System.Drawing.Point]$pt = New-Object System.Drawing.Point
-    [WinApi]::GetCursorPos([ref]$pt) | Out-Null
-    return "$($pt.X), $($pt.Y)"
+# Ustaw DPI-aware (jeżeli możliwe)
+[WinAPI.User32]::SetProcessDPIAware() | Out-Null
+
+# Funkcja do uzyskania ścieżki pliku względem skryptu
+function Get-ResourcePath {
+    param([string]$RelativePath)
+    return Join-Path -Path $PSScriptRoot -ChildPath $RelativePath
 }
 
-function Do-Click([int]$x, [int]$y) {
-    [WinApi]::mouse_event($MOUSEEVENTF_LEFTDOWN, $x, $y, 0, [UIntPtr]::Zero)
-    Start-Sleep -Milliseconds 50
-    [WinApi]::mouse_event($MOUSEEVENTF_LEFTUP, $x, $y, 0, [UIntPtr]::Zero)
-}
-
-# --- Wczytaj lub utwórz config.json ---
-$configPath = Join-Path (Get-Location) 'config.json'
-if (-Not (Test-Path $configPath)) {
-    $default = @{
-        MAP_POS              = "0, 0"
-        PLACE_FLAG_POS       = "0, 0"
-        GUESS_BUTTON_POS     = "0, 0"
-        CONTINUE_BUTTON_POS  = "0, 0"
-        ERROR_BUTTON_CLOSE_POS = "0, 0"
+# Funkcja do załadowania konfiguracji JSON lub ustawienia wartości domyślnych
+function Load-Config {
+    param([string]$Filename)
+    $path = Get-ResourcePath $Filename
+    if (Test-Path $path) {
+        return Get-Content $path -Raw | ConvertFrom-Json
+    } else {
+        return @{
+            MAP_POS               = "0, 0"
+            PLACE_FLAG_POS        = "0, 0"
+            GUESS_BUTTON_POS      = "0, 0"
+            CONTINUE_BUTTON_POS   = "0, 0"
+            ERROR_BUTTON_CLOSE_POS= "0, 0"
+        }
     }
-    $default | ConvertTo-Json | Set-Content $configPath
 }
 
-# --- GUI ---
-$form = New-Object System.Windows.Forms.Form
-$form.Text = "OpenGuesserXP - Ustawienia"
-$form.Size = New-Object System.Drawing.Size(350,300)
-$form.StartPosition = "CenterScreen"
-
-$fields = @("MAP_POS","PLACE_FLAG_POS","GUESS_BUTTON_POS","CONTINUE_BUTTON_POS","ERROR_BUTTON_CLOSE_POS")
-$entries = @{}
-
-for ($i=0; $i -lt $fields.Count; $i++) {
-    $y = 10 + $i* thirty
-    $lbl = New-Object System.Windows.Forms.Label
-    $lbl.Text = $fields[$i]
-    $lbl.Location = New-Object System.Drawing.Point(10,$y)
-    $lbl.AutoSize = $true
-    $form.Controls.Add($lbl)
-
-    $tb = New-Object System.Windows.Forms.TextBox
-    $tb.Location = New-Object System.Drawing.Point(130,$y)
-    $tb.Size = New-Object System.Drawing.Size(100,20)
-    $form.Controls.Add($tb)
-
-    $btn = New-Object System.Windows.Forms.Button
-    $btn.Text = "Pobierz"
-    $btn.Location = New-Object System.Drawing.Point(240,$y-2)
-    $btn.Size = New-Object System.Drawing.Size(75,23)
-    $btn.Add_Click({ $tb.Text = Get-MousePosition })
-    $form.Controls.Add($btn)
-
-    $entries[$fields[$i]] = $tb
+# Funkcja do zamiany "x, y" na liczby
+function Parse-Position {
+    param([string]$PosString)
+    $coords = $PosString -split '\s*,\s*'
+    return [int]$coords[0], [int]$coords[1]
 }
 
-# Załaduj istniejące wartości do textboxów
-$json = Get-Content $configPath | ConvertFrom-Json
-foreach ($f in $fields) { $entries[$f].Text = $json.$f }
-
-# Przycisk Zapisz
-$saveBtn = New-Object System.Windows.Forms.Button
-$saveBtn.Text = "Zapisz"
-$saveBtn.Location = New-Object System.Drawing.Point(130, 10 + $fields.Count* thirty)
-$saveBtn.Size = New-Object System.Drawing.Size(75,23)
-$saveBtn.Add_Click({
-    $h = @{}
-    foreach ($f in $fields) { $h[$f] = $entries[$f].Text }
-    $h | ConvertTo-Json | Set-Content $configPath
-    [System.Windows.Forms.MessageBox]::Show("Zapisano konfigurację","Sukces",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Information)
-})
-$form.Controls.Add($saveBtn)
-
-# Pokaż GUI
-[void]$form.ShowDialog()
-
-# --- Główna pętla klikacza ---
-# Wczytaj ponownie po zamknięciu GUI
-$config = Get-Content $configPath | ConvertFrom-Json
-
-function Parse-XY($s) {
-    $a = $s -split ',' | ForEach-Object { $_.Trim() }
-    return [int]$a[0], [int]$a[1]
+# Funkcja do ruchu kursorem i kliknięcia
+function Move-AndClick {
+    param($X, $Y)
+    [WinAPI.User32]::SetCursorPos($X, $Y) | Out-Null
+    Start-Sleep -Milliseconds 100
+    [WinAPI.User32]::mouse_event($MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+    [WinAPI.User32]::mouse_event($MOUSEEVENTF_LEFTUP,   0, 0, 0, 0)
 }
 
-$map = Parse-XY $config.MAP_POS
-$place = Parse-XY $config.PLACE_FLAG_POS
-$guess = Parse-XY $config.GUESS_BUTTON_POS
-$cont = Parse-XY $config.CONTINUE_BUTTON_POS
-$err  = Parse-XY $config.ERROR_BUTTON_CLOSE_POS
+# Wyświetlenie i ewentualne ponowne ustawienie współrzędnych
+function Prompt-ForCoordinates {
+    $choice = Read-Host "Czy chcesz wybrać nowe współrzędne? (y/n)"
+    if ($choice.Trim().ToLower() -eq 'y') {
+        & python (Get-ResourcePath "find_coordinates.py")
+        Write-Host "Restart aplikacji za 2 sekundy..."
+        Start-Sleep -Seconds 2
+    }
+}
 
-Write-Host "Trwa rozruch... (wciśnij ESC, aby przerwać)" -ForegroundColor Cyan
-Start-Sleep -Seconds 3
+# Wyświetl aktualne współrzędne i zwróć konfigurację
+function Reload-Coordinates {
+    param([string]$Filename)
+    $cfg = Load-Config $Filename
+    Write-Host "`nAktualne współrzędne:"
+    foreach ($k in $cfg.PSObject.Properties.Name) {
+        Write-Host "  $k : `"$($cfg.$k)`""
+    }
+    return $cfg
+}
 
-$logFile = 'log.txt'
-"Log start" | Out-File $logFile -Encoding utf8
+# Główna część skryptu
+function Main {
+    # Wczytaj i opcjonalnie zmień współrzędne
+    $config = Reload-Coordinates "config.json"
+    Prompt-ForCoordinates
+    $config = Reload-Coordinates "config.json"
 
-$attempt = 1
-while ($true) {
-    # Sprawdź ESC (kod 27)
-    if ([WinApi]::GetAsyncKeyState(0x1B) -band 0x8000) {
-        Write-Host "Przerwano przez użytkownika." -ForegroundColor Yellow
-        break
+    # Parsowanie współrzędnych
+    $mapX, $mapY               = Parse-Position $config.MAP_POS
+    $placeX, $placeY           = Parse-Position $config.PLACE_FLAG_POS
+    $guessX, $guessY           = Parse-Position $config.GUESS_BUTTON_POS
+    $continueX, $continueY     = Parse-Position $config.CONTINUE_BUTTON_POS
+    $errX, $errY               = Parse-Position $config.ERROR_BUTTON_CLOSE_POS
+
+    Write-Host "`nPrzytrzymaj ESC, aby zakończyć!"
+    Start-Sleep -Seconds 2
+    3..1 | ForEach-Object {
+        Write-Host $_
+        Start-Sleep -Seconds 1
     }
 
-    $now = (Get-Date).ToString("HH:mm:ss")
-    $entry = "cycle $attempt at $now"
-    Write-Host $entry
-    $entry | Out-File $logFile -Append -Encoding utf8
-    $attempt++
+    # Przygotuj plik logów
+    $logPath = Join-Path $PSScriptRoot "log.txt"
+    "Log start" | Out-File -FilePath $logPath -Encoding utf8
 
-    # Kliknięcia
-    Do-Click $map[0] $map[1]
-    Do-Click $place[0] $place[1]
-    Do-Click $guess[0] $guess[1]
-    Do-Click $cont[0] $cont[1]
-    Do-Click $err[0]  $err[1]
+    $attempt = 1
 
-    Start-Sleep -Milliseconds 500
+    while ($true) {
+        # Sprawdź czy wciśnięto ESC
+        if ($Host.UI.RawUI.KeyAvailable) {
+            $key = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+            if ($key.VirtualKeyCode -eq 27) {
+                Write-Host "Program zakończony!"
+                break
+            }
+        }
+
+        # Zapis cyklu
+        $timeNow  = Get-Date -Format "HH:mm:ss"
+        $entry    = "cycle $attempt at $timeNow"
+        Write-Host "`n$entry"
+        $entry    | Add-Content -Path $logPath -Encoding utf8
+        $attempt++
+
+        # Sekwencja klikania
+        Move-AndClick $mapX       $mapY
+        Move-AndClick $placeX     $placeY
+        Move-AndClick $guessX     $guessY
+        Move-AndClick $continueX  $continueY
+        Move-AndClick $errX       $errY
+
+        Start-Sleep -Milliseconds 200
+    }
 }
+
+# Uruchomienie
+Main
