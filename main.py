@@ -63,7 +63,7 @@ def main():
     continue_x, continue_y = parse_position(config["CONTINUE_BUTTON_POS"])
     err_x, err_y = parse_position(config["ERROR_BUTTON_CLOSE_POS"])
 
-    print("Be ready!")
+    print("\n\nHold ESCAPE to end!")
     time.sleep(2)
     print(3)
     time.sleep(1)
@@ -71,7 +71,6 @@ def main():
     time.sleep(1)
     print(1)
     time.sleep(1)
-    print("Hold ESCAPE to end!")
 
     def move_and_click(x, y):
         pyautogui.moveTo(x, y, duration=0.1)
@@ -89,7 +88,7 @@ def main():
             break
 
         now = datetime.now().strftime("%H:%M:%S")
-        log_entry = f"att:{attempt} at {now}"
+        log_entry = f"cycle {attempt} at {now}"
         print(f"\n{log_entry}")
 
         with open(log_path, "a", encoding="utf-8") as log_file:
