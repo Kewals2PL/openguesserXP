@@ -1,4 +1,4 @@
-# Załaduj niezbędne metody z WinAPI do poruszania myszką i klikania
+# Załaduj WinAPI
 Add-Type -Namespace WinAPI -Name User32 -MemberDefinition @"
     [DllImport("user32.dll")]
     public static extern bool SetProcessDPIAware();
@@ -8,20 +8,25 @@ Add-Type -Namespace WinAPI -Name User32 -MemberDefinition @"
     public static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
 "@
 
-# Flagi do mouse_event
+# Flagi do kliknięć
 $MOUSEEVENTF_LEFTDOWN = 0x0002
 $MOUSEEVENTF_LEFTUP   = 0x0004
 
-# Ustaw DPI-aware (jeżeli możliwe)
+# DPI-aware
 [WinAPI.User32]::SetProcessDPIAware() | Out-Null
 
-# Funkcja do uzyskania ścieżki pliku względem skryptu
+# Zwraca ścieżkę względną względem katalogu skryptu
 function Get-ResourcePath {
     param([string]$RelativePath)
-    return Join-Path -Path $PSScriptRoot -ChildPath $RelativePath
+    $scriptPath = $MyInvocation.MyCommand.Path
+    if (-not $scriptPath) {
+        throw "Nie można ustalić ścieżki do skryptu. Uruchom jako plik .ps1."
+    }
+    $basePath = Split-Path -Path $scriptPath -Parent
+    return Join-Path -Path $basePath -ChildPath $RelativePath
 }
 
-# Funkcja do załadowania konfiguracji JSON lub ustawienia wartości domyślnych
+# Wczytuje konfigurację z JSON lub domyślne wartości
 function Load-Config {
     param([string]$Filename)
     $path = Get-ResourcePath $Filename
@@ -38,14 +43,14 @@ function Load-Config {
     }
 }
 
-# Funkcja do zamiany "x, y" na liczby
+# Parsuje "x, y" do liczb
 function Parse-Position {
     param([string]$PosString)
     $coords = $PosString -split '\s*,\s*'
     return [int]$coords[0], [int]$coords[1]
 }
 
-# Funkcja do ruchu kursorem i kliknięcia
+# Kliknij na pozycji
 function Move-AndClick {
     param($X, $Y)
     [WinAPI.User32]::SetCursorPos($X, $Y) | Out-Null
@@ -54,7 +59,7 @@ function Move-AndClick {
     [WinAPI.User32]::mouse_event($MOUSEEVENTF_LEFTUP,   0, 0, 0, 0)
 }
 
-# Wyświetlenie i ewentualne ponowne ustawienie współrzędnych
+# Czy chcesz ustawić nowe współrzędne?
 function Prompt-ForCoordinates {
     $choice = Read-Host "Czy chcesz wybrać nowe współrzędne? (y/n)"
     if ($choice.Trim().ToLower() -eq 'y') {
@@ -64,7 +69,7 @@ function Prompt-ForCoordinates {
     }
 }
 
-# Wyświetl aktualne współrzędne i zwróć konfigurację
+# Wczytaj i pokaż współrzędne
 function Reload-Coordinates {
     param([string]$Filename)
     $cfg = Load-Config $Filename
@@ -75,19 +80,17 @@ function Reload-Coordinates {
     return $cfg
 }
 
-# Główna część skryptu
+# Główna funkcja
 function Main {
-    # Wczytaj i opcjonalnie zmień współrzędne
     $config = Reload-Coordinates "config.json"
     Prompt-ForCoordinates
     $config = Reload-Coordinates "config.json"
 
-    # Parsowanie współrzędnych
-    $mapX, $mapY               = Parse-Position $config.MAP_POS
-    $placeX, $placeY           = Parse-Position $config.PLACE_FLAG_POS
-    $guessX, $guessY           = Parse-Position $config.GUESS_BUTTON_POS
-    $continueX, $continueY     = Parse-Position $config.CONTINUE_BUTTON_POS
-    $errX, $errY               = Parse-Position $config.ERROR_BUTTON_CLOSE_POS
+    $mapX, $mapY         = Parse-Position $config.MAP_POS
+    $placeX, $placeY     = Parse-Position $config.PLACE_FLAG_POS
+    $guessX, $guessY     = Parse-Position $config.GUESS_BUTTON_POS
+    $continueX, $continueY = Parse-Position $config.CONTINUE_BUTTON_POS
+    $errX, $errY         = Parse-Position $config.ERROR_BUTTON_CLOSE_POS
 
     Write-Host "`nPrzytrzymaj ESC, aby zakończyć!"
     Start-Sleep -Seconds 2
@@ -96,14 +99,13 @@ function Main {
         Start-Sleep -Seconds 1
     }
 
-    # Przygotuj plik logów
-    $logPath = Join-Path $PSScriptRoot "log.txt"
+    $logPath = Join-Path (Split-Path $MyInvocation.MyCommand.Path -Parent) "log.txt"
     "Log start" | Out-File -FilePath $logPath -Encoding utf8
 
     $attempt = 1
 
     while ($true) {
-        # Sprawdź czy wciśnięto ESC
+        # Sprawdź ESC (działa tylko w terminalu interaktywnym)
         if ($Host.UI.RawUI.KeyAvailable) {
             $key = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
             if ($key.VirtualKeyCode -eq 27) {
@@ -112,23 +114,20 @@ function Main {
             }
         }
 
-        # Zapis cyklu
-        $timeNow  = Get-Date -Format "HH:mm:ss"
-        $entry    = "cycle $attempt at $timeNow"
+        $now = Get-Date -Format "HH:mm:ss"
+        $entry = "cycle $attempt at $now"
         Write-Host "`n$entry"
-        $entry    | Add-Content -Path $logPath -Encoding utf8
+        $entry | Add-Content -Path $logPath -Encoding utf8
         $attempt++
 
-        # Sekwencja klikania
-        Move-AndClick $mapX       $mapY
-        Move-AndClick $placeX     $placeY
-        Move-AndClick $guessX     $guessY
-        Move-AndClick $continueX  $continueY
-        Move-AndClick $errX       $errY
+        Move-AndClick $mapX $mapY
+        Move-AndClick $placeX $placeY
+        Move-AndClick $guessX $guessY
+        Move-AndClick $continueX $continueY
+        Move-AndClick $errX $errY
 
         Start-Sleep -Milliseconds 200
     }
 }
 
-# Uruchomienie
 Main
