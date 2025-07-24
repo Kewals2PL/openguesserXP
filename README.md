@@ -28,17 +28,17 @@ The `config.json` file should contain the following format:
 (Each entry represents screen coordinates in X, Y format.)
 ## How to Run
 
-    Make sure main.ps1 and config.json are in the same folder.
+1. Make sure main.ps1 and config.json are in the same folder.
 
-    Open PowerShell in that directory.
+2. Open PowerShell in that directory.
 
-    Run the script using:
+3. Run the script using:
 
-powershell -ExecutionPolicy Bypass -File .\main.ps1
+`powershell -ExecutionPolicy Bypass -File .\main.ps1`
 
-    You will be prompted whether to update coordinates. Type y if you want to run the Python tool find_coordinates.py (must be present and Python must be installed).
+4. You will be prompted whether to update coordinates. Type y if you want to run the Python tool find_coordinates.py (must be present and Python must be installed).
 
-    The script will start clicking automatically. Press ESC at any time to stop the loop.
+5. The script will start clicking automatically. Press ESC at any time to stop the loop.
 
 ### Setting Coordinates (optional)
 
