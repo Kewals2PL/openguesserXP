@@ -10,7 +10,7 @@ This program won’t work until you configure it, because it depends on:
 
 ## Step-by-Step Instructions:
 
-   1. Launch the EXE file
+   1. Launch the `ps1` file
    2. Choose coordinates
    3. **Press ESC to quit**
 
